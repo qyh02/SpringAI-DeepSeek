@@ -1,6 +1,7 @@
 package com.qqq.ai.config;
 
 import com.qqq.ai.constants.SystemConstants;
+import com.qqq.ai.tools.CourseTools;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
@@ -44,6 +45,19 @@ public class CommonConfiguration {
                         new SimpleLoggerAdvisor(),
                         MessageChatMemoryAdvisor.builder(chatMemory).build()
                 )
+                .build();
+    }
+
+    @Bean
+    public ChatClient serviceChatClient(DeepSeekChatModel deepSeekChatModel, ChatMemory chatMemory, CourseTools courseTools) {
+        return ChatClient
+                .builder(deepSeekChatModel)
+                .defaultSystem(SystemConstants.SERVICE_SYSTEM_PROMPT)
+                .defaultAdvisors(
+                        new SimpleLoggerAdvisor(),
+                        MessageChatMemoryAdvisor.builder(chatMemory).build()
+                )
+                .defaultTools(courseTools)
                 .build();
     }
 }

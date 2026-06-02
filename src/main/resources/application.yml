@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: ai-demo
+  ai:
+    deepseek:
+      api-key: sk-88174e752ecb455dae9873fbba24b4c1
+      base-url: https://api.deepseek.com
+      chat:
+        model: deepseek-v4-flash
+  ai.
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/itheima?serverTimezone=Asia/Shanghai&useSSL=false&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&tinyInt1isBit=false&allowPublicKeyRetrieval=true&allowMultiQueries=true&useServerPrepStmts=false
+    username: root
+    password: 123456
+logging:
+  level:
+    org.springframework.ai: debug
+    com.qqq.ai: debug
+server:
+  port: 8081
