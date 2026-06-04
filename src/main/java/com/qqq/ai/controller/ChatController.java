@@ -3,9 +3,17 @@ package com.qqq.ai.controller;
 import com.qqq.ai.repository.ChatHistoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.content.Media;
+import org.springframework.util.MimeType;
+import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
+
+import java.util.List;
+import java.util.Objects;
 
 import static org.springframework.ai.chat.memory.ChatMemory.CONVERSATION_ID;
 
@@ -24,13 +32,42 @@ public class ChatController {
     private final ChatHistoryRepository chatHistoryRepository;
 
     @RequestMapping(value = "/chat",produces = "text/html;charset=utf-8")
-    public Flux<String> send(String prompt, String chatId) {
+    public Flux<String> send(
+            @RequestParam("prompt") String prompt,
+            @RequestParam("chatId") String chatId,
+            @RequestParam(value = "files", required = false) List<MultipartFile> files) {
         //1.保证会话id
         chatHistoryRepository.save("chat", chatId);
-        //2.调用模型
+        // 2.请求模型
+        if (files == null || files.isEmpty()) {
+            // 没有附件，纯文本聊天
+            return textChat(prompt, chatId);
+        } else {
+            // 有附件，多模态聊天
+            return multiModalChat(prompt, chatId, files);
+        }
+    }
+
+    private Flux<String> multiModalChat(String prompt, String chatId, List<MultipartFile> files) {
+        // 1.解析多媒体
+        List<Media> medias = files.stream()
+                .map(file -> Media.builder()
+                                .mimeType(MimeType.valueOf(Objects.requireNonNull(file.getContentType())))
+                                .data(file.getResource())
+                                .build())
+                .toList();
+        // 2.请求模型
+        return chatClient.prompt()
+                .user(p -> p.text(prompt).media(medias.toArray(Media[]::new)))
+                .advisors(a -> a.param(CONVERSATION_ID, chatId))
+                .stream()
+                .content();
+    }
+
+    private Flux<String> textChat(String prompt, String chatId) {
         return chatClient.prompt()
                 .user(prompt)
-                .advisors(advisorSpec -> advisorSpec.param(CONVERSATION_ID, chatId))
+                .advisors(a -> a.param(CONVERSATION_ID, chatId))
                 .stream()
                 .content();
     }
