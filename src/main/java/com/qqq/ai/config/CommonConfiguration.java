@@ -5,10 +5,12 @@ import com.qqq.ai.tools.CourseTools;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
+import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.deepseek.DeepSeekChatModel;
 import org.springframework.ai.embedding.EmbeddingModel;
+import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.SimpleVectorStore;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.context.annotation.Bean;
@@ -61,6 +63,24 @@ public class CommonConfiguration {
                         MessageChatMemoryAdvisor.builder(chatMemory).build()
                 )
                 .defaultTools(courseTools)
+                .build();
+    }
+
+    @Bean
+    public ChatClient pdfChatClient(DeepSeekChatModel deepSeekChatModel, ChatMemory chatMemory, VectorStore vectorStore) {
+        return ChatClient
+                .builder(deepSeekChatModel)
+                .defaultSystem("请根据提供的上下文回答问题，不要自己猜测。")
+                .defaultAdvisors(
+                        new SimpleLoggerAdvisor(),
+                        MessageChatMemoryAdvisor.builder(chatMemory).build(),
+                        QuestionAnswerAdvisor.builder(vectorStore)
+                                .searchRequest(SearchRequest.builder()
+                                        .similarityThreshold(0.6)
+                                        .topK(2)
+                                        .build())
+                                .build()
+                )
                 .build();
     }
 

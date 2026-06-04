@@ -18,6 +18,7 @@ public class MvcConfiguration implements WebMvcConfigurer {
         registry.addMapping("/ai/**")
                 .allowedOrigins("*")
                 .allowedMethods("*")
-                .allowedHeaders("*");
+                .allowedHeaders("*")
+                .exposedHeaders("Content-Disposition");;
     }
 }
